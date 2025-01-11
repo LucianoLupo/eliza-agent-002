@@ -7,7 +7,6 @@ import {
   type Character,
 } from "@elizaos/core";
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
-import { createNodePlugin } from "@elizaos/plugin-node";
 import { solanaPlugin } from "@elizaos/plugin-solana";
 import fs from "fs";
 import net from "net";
@@ -23,6 +22,7 @@ import {
   parseArguments,
 } from "./config/index.ts";
 import { initializeDatabase } from "./database/index.ts";
+import createNewsPlugin from "./plugins/plugin-news/index.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,8 +33,8 @@ export const wait = (minTime: number = 1000, maxTime: number = 3000) => {
   return new Promise((resolve) => setTimeout(resolve, waitTime));
 };
 
-let nodePlugin: any | undefined;
-
+let newsPlugin: any | undefined;
+newsPlugin = createNewsPlugin();
 export function createAgent(
   character: Character,
   db: any,
@@ -44,10 +44,8 @@ export function createAgent(
   elizaLogger.success(
     elizaLogger.successesTitle,
     "Creating runtime for character",
-    character.name,
+    character.name
   );
-
-  nodePlugin ??= createNodePlugin();
 
   return new AgentRuntime({
     databaseAdapter: db,
@@ -57,7 +55,7 @@ export function createAgent(
     character,
     plugins: [
       bootstrapPlugin,
-      nodePlugin,
+      newsPlugin,
       character.settings?.secrets?.WALLET_PUBLIC_KEY ? solanaPlugin : null,
     ].filter(Boolean),
     providers: [],
@@ -100,7 +98,7 @@ async function startAgent(character: Character, directClient: DirectClient) {
   } catch (error) {
     elizaLogger.error(
       `Error starting agent for character ${character.name}:`,
-      error,
+      error
     );
     console.error(error);
     throw error;
